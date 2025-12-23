@@ -257,13 +257,13 @@ class GraspNetEval(GraspNet):
             ap = np.mean(res)
             res_reshaped = np.array(res).reshape(-1, 6)
             res_mean = np.mean(res_reshaped, axis=0)
-            print('----')
+            print('\n' + '='*50)
             print(f"Split: {k} Mini")
-            print("AP0.4",res_mean[1]*100)
-            print("AP0.8",res_mean[3]*100)
-            print("AP",np.mean(res_mean)*100)
-            print('----')
-            print(np.mean(res_mean)*100)
+            print('='*50)
+            print(f"AP@0.4: {res_mean[1]*100:.2f}%")
+            print(f"AP@0.8: {res_mean[3]*100:.2f}%")
+            print(f"AP    : {np.mean(res_mean)*100:.2f}%")
+            print('='*50 + '\n')
         return res, ap
 
     def eval_seen(self, dump_folder, proc = 2):
@@ -284,13 +284,13 @@ class GraspNetEval(GraspNet):
         ap = np.mean(res)
         res = np.array(res).reshape(-1, 6)
         res = np.mean(res, axis=0)
-        print('----')
+        print('\n' + '='*50)
         print("Split: Seen")
-        print("AP0.4",res[1]*100)
-        print("AP0.8",res[3]*100)
-        print("AP",np.mean(res)*100)
-        print('----')
-        print(np.mean(res)*100)
+        print('='*50)
+        print(f"AP@0.4: {res[1]*100:.2f}%")
+        print(f"AP@0.8: {res[3]*100:.2f}%")
+        print(f"AP    : {np.mean(res)*100:.2f}%")
+        print('='*50 + '\n')
         return res, ap
 
     def eval_similar(self, dump_folder, proc = 2):
@@ -311,13 +311,13 @@ class GraspNetEval(GraspNet):
         ap = np.mean(res)
         res = np.array(res).reshape(-1, 6)
         res = np.mean(res, axis=0)
-        print('----')
+        print('\n' + '='*50)
         print('Split: Similar')
-        print("AP0.4",res[1]*100)
-        print("AP0.8",res[3]*100)
-        print("AP",np.mean(res)*100)
-        print('----')
-        print(np.mean(res)*100)
+        print('='*50)
+        print(f"AP@0.4: {res[1]*100:.2f}%")
+        print(f"AP@0.8: {res[3]*100:.2f}%")
+        print(f"AP    : {np.mean(res)*100:.2f}%")
+        print('='*50 + '\n')
         return res, ap
 
     def eval_novel(self, dump_folder, proc = 2):
@@ -338,13 +338,13 @@ class GraspNetEval(GraspNet):
         ap = np.mean(res)
         res = np.array(res).reshape(-1, 6)
         res = np.mean(res, axis=0)
-        print('----')
+        print('\n' + '='*50)
         print('Split: Novel')
-        print("AP0.4",res[1]*100)
-        print("AP0.8",res[3]*100)
-        print("AP",np.mean(res)*100)
-        print('----')
-        print(np.mean(res)*100)
+        print('='*50)
+        print(f"AP@0.4: {res[1]*100:.2f}%")
+        print(f"AP@0.8: {res[3]*100:.2f}%")
+        print(f"AP    : {np.mean(res)*100:.2f}%")
+        print('='*50 + '\n')
         return res, ap
 
     def eval_all(self, dump_folder, proc = 2):
@@ -363,5 +363,13 @@ class GraspNetEval(GraspNet):
         '''
         res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 190)), dump_folder = dump_folder, proc = proc))
         ap = [np.mean(res), np.mean(res[0:30]), np.mean(res[30:60]), np.mean(res[60:90])]
-        print('\nEvaluation Result:\n----------\n{}, AP={}, AP Seen={}, AP Similar={}, AP Novel={}'.format(self.camera, ap[0], ap[1], ap[2], ap[3]))
+        print('\n' + '='*50)
+        print('Evaluation Result')
+        print('='*50)
+        print(f"Camera      : {self.camera}")
+        print(f"AP (Overall): {ap[0]*100:.2f}%")
+        print(f"AP (Seen)   : {ap[1]*100:.2f}%")
+        print(f"AP (Similar): {ap[2]*100:.2f}%")
+        print(f"AP (Novel)  : {ap[3]*100:.2f}%")
+        print('='*50 + '\n')
         return res, ap
