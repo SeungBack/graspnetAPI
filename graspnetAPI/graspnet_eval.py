@@ -91,7 +91,7 @@ class GraspNetEval(GraspNet):
             pose_list.append(mat)
         return obj_list, pose_list, camera_pose, align_mat
         
-    def eval_scene(self, scene_id, dump_folder, TOP_K = 50, return_list = False,vis = False, max_width = 0.1):
+    def eval_scene(self, scene_id, dump_folder, TOP_K = 50, return_list = False,vis = False, max_width = 0.1, mini=False):
         '''
         **Input:**
 
@@ -127,8 +127,11 @@ class GraspNetEval(GraspNet):
         grasp_list_list = []
         score_list_list = []
         collision_list_list = []
-
-        for ann_id in range(256):
+        if mini:
+            ann_range = range(5)
+        else:
+            ann_range = range(256)
+        for ann_id in ann_range:
             grasp_group = GraspGroup().from_npy(os.path.join(dump_folder,get_scene_name(scene_id), self.camera, '%04d.npy' % (ann_id,)))
             _, pose_list, camera_pose, align_mat = self.get_model_poses(scene_id, ann_id)
             table_trans = transform_points(table, np.linalg.inv(np.matmul(align_mat, camera_pose)))
@@ -203,7 +206,7 @@ class GraspNetEval(GraspNet):
         else:
             return scene_accuracy, grasp_list_list, score_list_list, collision_list_list
 
-    def parallel_eval_scenes(self, scene_ids, dump_folder, proc = 2):
+    def parallel_eval_scenes(self, scene_ids, dump_folder, proc = 2, mini=False):
         '''
         **Input:**
 
@@ -221,13 +224,47 @@ class GraspNetEval(GraspNet):
         p = Pool(processes = proc)
         res_list = []
         for scene_id in scene_ids:
-            res_list.append(p.apply_async(self.eval_scene, (scene_id, dump_folder)))
+            res_list.append(p.apply_async(self.eval_scene, (scene_id, dump_folder), {'mini': mini}))
         p.close()
         p.join()
         scene_acc_list = []
         for res in res_list:
             scene_acc_list.append(res.get())
         return scene_acc_list
+
+    def eval_mini(self, dump_folder, proc = 2):
+        '''
+        **Input:**
+
+        - dump_folder: string of the folder that saves the npy files.
+
+        - proc: int of the number of processes to use to evaluate.
+
+        **Output:**
+
+        - res: numpy array of the detailed accuracy.
+
+        - ap: float of the AP for mini split.
+        '''
+        info = {
+            'test_seen': list(range(100, 130)),
+            'test_similar': list(range(130, 160)),
+            'test_novel': list(range(160, 190)),
+        }
+        for k, v in info.items():
+            print(f"Evaluating {k}...")
+            res = np.array(self.parallel_eval_scenes(scene_ids = v, dump_folder = dump_folder, proc = proc, mini=True))
+            ap = np.mean(res)
+            res_reshaped = np.array(res).reshape(-1, 6)
+            res_mean = np.mean(res_reshaped, axis=0)
+            print('----')
+            print(f"Split: {k} Mini")
+            print("AP0.4",res_mean[1]*100)
+            print("AP0.8",res_mean[3]*100)
+            print("AP",np.mean(res_mean)*100)
+            print('----')
+            print(np.mean(res_mean)*100)
+        return res, ap
 
     def eval_seen(self, dump_folder, proc = 2):
         '''
@@ -245,7 +282,15 @@ class GraspNetEval(GraspNet):
         '''
         res = np.array(self.parallel_eval_scenes(scene_ids = list(range(100, 130)), dump_folder = dump_folder, proc = proc))
         ap = np.mean(res)
-        print('\nEvaluation Result:\n----------\n{}, AP Seen={}'.format(self.camera, ap))
+        res = np.array(res).reshape(-1, 6)
+        res = np.mean(res, axis=0)
+        print('----')
+        print("Split: Seen")
+        print("AP0.4",res[1]*100)
+        print("AP0.8",res[3]*100)
+        print("AP",np.mean(res)*100)
+        print('----')
+        print(np.mean(res)*100)
         return res, ap
 
     def eval_similar(self, dump_folder, proc = 2):
@@ -264,7 +309,15 @@ class GraspNetEval(GraspNet):
         '''
         res = np.array(self.parallel_eval_scenes(scene_ids = list(range(130, 160)), dump_folder = dump_folder, proc = proc))
         ap = np.mean(res)
-        print('\nEvaluation Result:\n----------\n{}, AP={}, AP Similar={}'.format(self.camera, ap, ap))
+        res = np.array(res).reshape(-1, 6)
+        res = np.mean(res, axis=0)
+        print('----')
+        print('Split: Similar')
+        print("AP0.4",res[1]*100)
+        print("AP0.8",res[3]*100)
+        print("AP",np.mean(res)*100)
+        print('----')
+        print(np.mean(res)*100)
         return res, ap
 
     def eval_novel(self, dump_folder, proc = 2):
@@ -283,7 +336,15 @@ class GraspNetEval(GraspNet):
         '''
         res = np.array(self.parallel_eval_scenes(scene_ids = list(range(160, 190)), dump_folder = dump_folder, proc = proc))
         ap = np.mean(res)
-        print('\nEvaluation Result:\n----------\n{}, AP={}, AP Novel={}'.format(self.camera, ap, ap))
+        res = np.array(res).reshape(-1, 6)
+        res = np.mean(res, axis=0)
+        print('----')
+        print('Split: Novel')
+        print("AP0.4",res[1]*100)
+        print("AP0.8",res[3]*100)
+        print("AP",np.mean(res)*100)
+        print('----')
+        print(np.mean(res)*100)
         return res, ap
 
     def eval_all(self, dump_folder, proc = 2):
