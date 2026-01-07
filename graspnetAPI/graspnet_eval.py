@@ -242,15 +242,15 @@ class GraspNetEval(GraspNet):
 
         **Output:**
 
-        - res: numpy array of the detailed accuracy.
-
-        - ap: float of the AP for mini split.
+        - results_dict: dict containing results for each split ('test_seen', 'test_similar', 'test_novel').
+                       Each split contains 'res' (AP at different thresholds) and 'ap' (mean AP).
         '''
         info = {
             'test_seen': list(range(100, 130)),
             'test_similar': list(range(130, 160)),
             'test_novel': list(range(160, 190)),
         }
+        results_dict = {}
         for k, v in info.items():
             print(f"Evaluating {k}...")
             res = np.array(self.parallel_eval_scenes(scene_ids = v, dump_folder = dump_folder, proc = proc, mini=True))
@@ -264,7 +264,11 @@ class GraspNetEval(GraspNet):
             print(f"AP@0.8: {res_mean[3]*100:.2f}%")
             print(f"AP    : {np.mean(res_mean)*100:.2f}%")
             print('='*50 + '\n')
-        return res, ap
+            results_dict[k] = {
+                'res': res_mean,
+                'ap': ap
+            }
+        return results_dict
 
     def eval_seen(self, dump_folder, proc = 2):
         '''
