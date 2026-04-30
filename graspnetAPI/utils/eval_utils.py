@@ -341,8 +341,13 @@ def eval_grasp(grasp_group, models, dexnet_models, poses, config, table=None, vo
         grasp_i.sort_by_score()
         pre_grasp_list.append(grasp_i[:10].grasp_group_array)
     all_grasp_list = np.vstack(pre_grasp_list)
+    if len(all_grasp_list) == 0:
+        empty_score_list = [np.empty((0,), dtype=np.float64) for _ in range(num_models)]
+        empty_collision_mask_list = [np.empty((0,), dtype=bool) for _ in range(num_models)]
+        return pre_grasp_list, empty_score_list, empty_collision_mask_list
+
     remain_mask = np.argsort(all_grasp_list[:,0])[::-1]
-    min_score = all_grasp_list[remain_mask[min(49,len(remain_mask) - 1)],0]
+    min_score = all_grasp_list[remain_mask[min(TOP_K - 1, len(remain_mask) - 1)],0]
 
     grasp_list = []
     for i in range(num_models):

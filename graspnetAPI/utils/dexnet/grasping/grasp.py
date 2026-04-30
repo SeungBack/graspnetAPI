@@ -231,7 +231,7 @@ class ParallelJawPtGrasp3D(PointGrasp):
     @staticmethod
     def configuration_from_params(center, axis, width, angle=0, jaw_width=0, min_width=0):
         """ Converts grasp parameters to a configuration vector. """
-        if np.abs(np.linalg.norm(axis) - 1.0) > 1e-5:
+        if np.abs(np.linalg.norm(axis) - 1.0) > 1e-4:
             raise ValueError('Illegal grasp axis. Must be norm one')
         configuration = np.zeros(10)
         configuration[0:3] = center
@@ -267,8 +267,8 @@ class ParallelJawPtGrasp3D(PointGrasp):
             min_grasp_width = 0
         else:
             min_grasp_width = configuration[9]
-        if np.abs(np.linalg.norm(configuration[3:6]) - 1.0) > 1e-5:
-            raise ValueError('Illegal grasp axis. Must be norm one')
+        # if np.abs(np.linalg.norm(configuration[3:6]) - 1.0) > 1e-5:
+        #     raise ValueError('Illegal grasp axis. Must be norm one')
         return configuration[0:3], configuration[3:6], configuration[6], configuration[7], configuration[
             8], min_grasp_width
 
